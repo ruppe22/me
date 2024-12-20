@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Recorder</title>
+</head>
+<body>
+    <h1>Video Recorder</h1>
+    <p>Click a link below to start recording:</p>
+    <ul>
+        <li><a href="#" id="record1">Record Video 1</a></li>
+        <li><a href="#" id="record2">Record Video 2</a></li>
+    </ul>
+
+    <video id="preview" autoplay muted style="display: none; width: 100%;"></video>
+    <button id="stop" style="display: none;">Stop Recording</button>
+
+    <script>
+        let mediaRecorder;
+        let chunks = [];
+
+        document.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', async (event) => {
+                event.preventDefault();
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                document.getElementById('preview').style.display = 'block';
+                document.getElementById('stop').style.display = 'block';
+                const video = document.getElementById('preview');
+                video.srcObject = stream;
+
+                mediaRecorder = new MediaRecorder(stream);
+                mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
+                mediaRecorder.onstop = () => {
+                    const blob = new Blob(chunks, { type: 'video/mp4' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'video.mp4';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                };
+                mediaRecorder.start();
+            });
+        });
+
+        document.getElementById('stop').addEventListener('click', () => {
+            mediaRecorder.stop();
+            document.getElementById('preview').style.display = 'none';
+            document.getElementById('stop').style.display = 'none';
+        });
+    </script>
+</body>
+</html>
